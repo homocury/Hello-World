@@ -6,6 +6,8 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace EggServer
 {
@@ -27,7 +29,17 @@ namespace EggServer
 
         static void RunProgram(string[] args)
         {
-            SocketServer server = new SocketServer(100, 100);
+            int processCount = Environment.ProcessorCount;
+            ThreadPool.SetMinThreads(processCount, processCount);
+            ThreadPool.SetMaxThreads(processCount, processCount);
+
+            XmlDocument config = new XmlDocument();
+            config.Load("EggServerConfig.xml");
+
+            int maxConnections = Convert.ToInt32(config.SelectSingleNode("/EggServerConfig/Network/MaxConnections").InnerText);
+            int listenPort = Convert.ToInt32(config.SelectSingleNode("/EggServerConfig/Network/ListenPort").InnerText);
+
+            SocketServer server = new SocketServer(maxConnections, listenPort);
             server.Init();
             server.Start(new IPEndPoint(IPAddress.Any, 4444));
 
