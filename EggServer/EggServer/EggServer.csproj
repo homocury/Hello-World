@@ -41,6 +41,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Network\BufferManager.cs" />
+    <Compile Include="Network\SocketServerConfig.cs" />
+    <Compile Include="Network\SocketAsyncEventArgsPool.cs" />
+    <Compile Include="Network\SocketServer.cs" />
+    <Compile Include="Network\UserToken.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
