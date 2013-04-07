@@ -128,6 +128,7 @@ namespace EggServer.Network
                 Console.WriteLine("The server has read a total of {0} bytes", mTotalBytesRead);
 
                 // 버퍼 오프셋 세팅
+                //TODO: 여기에서 패킷 다 받았는지 체크하고 핸들러에게 넘겨야 한다.
                 e.SetBuffer(e.Offset + token.mRecvBufferOffset, e.Count - token.mRecvBufferOffset);
                 
                 if (!token.Socket.ReceiveAsync(e))
@@ -145,7 +146,7 @@ namespace EggServer.Network
         {
             if (e.SocketError == SocketError.Success)
             {
-                // Send 버퍼에 쌓인게 있는지 확인하고 계속 보낸다.
+                //TODO: UserToken 뒤져서 Send 버퍼에 쌓인게 있는지 확인하고 계속 보낸다.
             }
             else
             {
