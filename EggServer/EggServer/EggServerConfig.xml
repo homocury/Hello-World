@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<EggServerConfig>
+  <Network>
+    <MaxConnections>100</MaxConnections>
+    <ListenPort>4444</ListenPort>
+    <BackLog>1000</BackLog>
+    <SendBufferSize>1048576</SendBufferSize>
+    <RecvBufferSize>1048576</RecvBufferSize>
+    <MaxOutstandingAccepts>50</MaxOutstandingAccepts>
+  </Network>
+</EggServerConfig>
