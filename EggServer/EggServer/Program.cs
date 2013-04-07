@@ -1,4 +1,5 @@
 ﻿using EggServer.Network;
+using EggServer.Util.Xml;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,15 +34,15 @@ namespace EggServer
             ThreadPool.SetMinThreads(processCount, processCount);
             ThreadPool.SetMaxThreads(processCount, processCount);
 
-            XmlDocument config = new XmlDocument();
-            config.Load("EggServerConfig.xml");
+            XmlHelper config = new XmlHelper("EggServerConfig.xml");
+            int maxConnections = config.GetSingleNodeValue<int>("/EggServerConfig/Network/MaxConnections");
+            int listenPort = config.GetSingleNodeValue<int>("/EggServerConfig/Network/ListenPort");
+            int sendBufferSize = config.GetSingleNodeValue<int>("/EggServerConfig/Network/SendBufferSize");
+            int recvBufferSize = config.GetSingleNodeValue<int>("/EggServerConfig/Network/RecvBufferSize");
+            int maxOutstandingAccepts = config.GetSingleNodeValue<int>("/EggServerConfig/Network/MaxOutstandingAccepts");
 
-            int maxConnections = Convert.ToInt32(config.SelectSingleNode("/EggServerConfig/Network/MaxConnections").InnerText);
-            int listenPort = Convert.ToInt32(config.SelectSingleNode("/EggServerConfig/Network/ListenPort").InnerText);
-
-            SocketServer server = new SocketServer(maxConnections, listenPort);
-            server.Init();
-            server.Start(new IPEndPoint(IPAddress.Any, 4444));
+            SocketServer server = new SocketServer(maxConnections, maxOutstandingAccepts, sendBufferSize, recvBufferSize);
+            server.Start(new IPEndPoint(IPAddress.Any, listenPort));
 
             Console.WriteLine("Press any key to terminate the server process....");
             Console.ReadKey();
