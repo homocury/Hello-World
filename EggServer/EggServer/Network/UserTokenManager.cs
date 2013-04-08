@@ -10,6 +10,8 @@ namespace EggServer.Network
 {
     class UserTokenManager
     {
+        private SocketServer mServer;
+
         private ConcurrentStack<UserToken> mPool;
 
         private BufferManager mSendBufferManager;
@@ -17,8 +19,10 @@ namespace EggServer.Network
 
         private EventHandler<SocketAsyncEventArgs> OnComplete;
 
-        public UserTokenManager(int maxConnections, int sendBufferSize, int recvBufferSize, EventHandler<SocketAsyncEventArgs> onComplete)
+        public UserTokenManager(SocketServer server, int maxConnections, int sendBufferSize, int recvBufferSize, EventHandler<SocketAsyncEventArgs> onComplete)
         {
+            mServer = server;
+
             mPool = new ConcurrentStack<UserToken>();
 
             mSendBufferManager = new BufferManager(maxConnections * sendBufferSize, sendBufferSize);
@@ -38,6 +42,8 @@ namespace EggServer.Network
             { 
                 throw new ArgumentNullException("UserToken cannot be null"); 
             }
+
+            userToken.Reset();
 
             mPool.Push(userToken);
         }
@@ -73,11 +79,9 @@ namespace EggServer.Network
 
             // 처음 생성할 때 버퍼를 할당해 놓는다. 풀에 반납하더라도 버퍼는 유지된다.
             mSendBufferManager.SetBuffer(sendEventArg);
-            mSendBufferManager.SetBuffer(recvEventArg);
+            mRecvBufferManager.SetBuffer(recvEventArg);
 
-            UserToken userToken = new UserToken();
-            userToken.SendSAEA = sendEventArg;
-            userToken.RecvSAEA = recvEventArg;
+            UserToken userToken = new UserToken(mServer, sendEventArg, recvEventArg);
 
             sendEventArg.UserToken = userToken;
             recvEventArg.UserToken = userToken;

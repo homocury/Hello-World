@@ -29,7 +29,7 @@ namespace EggServer.Network
             mMaxConnections = numConnections;
             mMaxAccepts = numAccepts;
 
-            mUserTokenManager = new UserTokenManager(numConnections, sendBufferSize, recvBufferSize, 
+            mUserTokenManager = new UserTokenManager(this, numConnections, sendBufferSize, recvBufferSize, 
                 new EventHandler<SocketAsyncEventArgs>(IO_Completed));
 
             mMaxNumberAcceptedClients = new Semaphore(numConnections, numConnections);
@@ -127,10 +127,37 @@ namespace EggServer.Network
                 
                 Console.WriteLine("The server has read a total of {0} bytes", mTotalBytesRead);
 
+                // 지금까지 받은 전체 bytes
+                token.RecvBufferOffset += e.BytesTransferred;
+
+                int startIndex = 0;
+
+                while (true)
+                {
+                    // 헤더가 있는지 확인
+                    if (token.RecvBufferOffset < 8)
+                    {
+                        break;
+                    }
+
+                    int packetLength = BitConverter.ToInt32(e.Buffer, startIndex + 4);
+                    if (token.RecvBufferOffset < 8 + packetLength)
+                    {
+                        break;
+                    }
+
+                    // 패킷이 다 받아졌다.
+                    
+                    //TODO: 핸들러를 호출하자.
+
+                    startIndex += (8 + packetLength);
+                    token.RecvBufferOffset -= (8 + packetLength);
+                }
+
                 // 버퍼 오프셋 세팅
-                //TODO: 여기에서 패킷 다 받았는지 체크하고 핸들러에게 넘겨야 한다.
-                e.SetBuffer(e.Offset + token.mRecvBufferOffset, e.Count - token.mRecvBufferOffset);
+                e.SetBuffer(e.Offset + token.RecvBufferOffset, e.Count - token.RecvBufferOffset);
                 
+                // 재수 없으면 스택이 터질수도 있다.
                 if (!token.Socket.ReceiveAsync(e))
                 {
                     ProcessReceive(e);
@@ -142,11 +169,28 @@ namespace EggServer.Network
             }
         }
 
+        public void StartSend(SocketAsyncEventArgs e)
+        {
+            UserToken token = e.UserToken as UserToken;
+
+            if (!token.Socket.SendAsync(e))
+            {
+                ProcessSend(e);
+            }
+        }
+
         private void ProcessSend(SocketAsyncEventArgs e)
         {
             if (e.SocketError == SocketError.Success)
             {
                 //TODO: UserToken 뒤져서 Send 버퍼에 쌓인게 있는지 확인하고 계속 보낸다.
+
+                UserToken token = e.UserToken as UserToken;
+
+                if (!token.FlushSendData())
+                {
+                    token.Sending = 0;
+                }
             }
             else
             {
